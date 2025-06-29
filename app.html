@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .form-section {
+            padding: 30px 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .product-item {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .product-item:hover {
+            border-color: #4f46e5;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+        }
+
+        .remove-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .total-final {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4f46e5;
+            border-top: 2px solid #4f46e5;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .share-section {
+            display: none;
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .share-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-section {
+                padding: 20px 15px;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Invoice Generator</h1>
+            <p>Create professional invoices instantly</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <div style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid #4f46e5;">
+                    <h2 style="color: #4f46e5; margin: 0; font-size: 1.5rem;">🛡️ RL Security Solutions</h2>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="invoiceNumber">Invoice #</label>
+                        <input type="text" id="invoiceNumber" placeholder="INV-001">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="invoiceDate">Date</label>
+                        <input type="date" id="invoiceDate">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="clientName">Client Name</label>
+                <input type="text" id="clientName" placeholder="Client Name">
+            </div>
+
+            <div class="form-group">
+                <label for="clientAddress">Client Address</label>
+                <textarea id="clientAddress" rows="3" placeholder="Client Address"></textarea>
+            </div>
+
+            <h3 style="margin: 30px 0 20px 0; color: #374151;">Products/Services</h3>
+            
+            <div id="products-container">
+                <div class="product-item">
+                    <div class="form-group">
+                        <label>Product/Service Name</label>
+                        <input type="text" class="product-name" placeholder="Product or Service">
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input type="number" class="quantity" value="1" min="1">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label>Price</label>
+                                <input type="number" class="price" placeholder="0.00" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label>Discount (%)</label>
+                                <input type="number" class="discount" placeholder="0" min="0" max="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Total: LKR <span class="item-total">0.00</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="add-btn" onclick="addProduct()">+ Add Product</button>
+
+            <div class="total-section">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">LKR 0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Total Discount:</span>
+                    <span id="totalDiscount">LKR 0.00</span>
+                </div>
+                <div class="total-row total-final">
+                    <span>Total:</span>
+                    <span id="finalTotal">LKR 0.00</span>
+                </div>
+            </div>
+
+            <div class="row" style="gap: 15px;">
+                <div class="col">
+                    <button class="generate-btn" onclick="downloadPDF()" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        📥 Download PDF
+                    </button>
+                </div>
+                <div class="col">
+                    <button class="generate-btn" onclick="shareInvoice()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        📤 Share Invoice
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Generating your invoice...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let productCount = 1;
+        let generatedPDF = null;
+
+        // Set today's date
+        document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+
+        function addProduct() {
+            productCount++;
+            const container = document.getElementById('products-container');
+            const productItem = document.createElement('div');
+            productItem.className = 'product-item';
+            productItem.innerHTML = `
+                <div class="form-group">
+                    <label>Product/Service Name</label>
+                    <input type="text" class="product-name" placeholder="Product or Service">
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" class="quantity" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Price</label>
+                            <input type="number" class="price" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Discount (%)</label>
+                            <input type="number" class="discount" placeholder="0" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Total: $<span class="item-total">0.00</span></label>
+                </div>
+                <button class="remove-btn" onclick="removeProduct(this)">Remove</button>
+            `;
+            container.appendChild(productItem);
+            attachEventListeners(productItem);
+        }
+
+        function removeProduct(button) {
+            button.parentElement.remove();
+            calculateTotal();
+        }
+
+        function attachEventListeners(container = document) {
+            const quantities = container.querySelectorAll('.quantity');
+            const prices = container.querySelectorAll('.price');
+            const discounts = container.querySelectorAll('.discount');
+
+            quantities.forEach(input => {
+                input.addEventListener('input', calculateTotal);
+            });
+            prices.forEach(input => {
+                input.addEventListener('input', calculateTotal);
+            });
+            discounts.forEach(input => {
+                input.addEventListener('input', calculateTotal);
+            });
+        }
+
+        function calculateTotal() {
+            const productItems = document.querySelectorAll('.product-item');
+            let subtotal = 0;
+            let totalDiscountAmount = 0;
+
+            productItems.forEach(item => {
+                const quantity = parseFloat(item.querySelector('.quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.price').value) || 0;
+                const discount = parseFloat(item.querySelector('.discount').value) || 0;
+
+                const itemSubtotal = quantity * price;
+                const discountAmount = itemSubtotal * (discount / 100);
+                const itemTotal = itemSubtotal - discountAmount;
+
+                item.querySelector('.item-total').textContent = itemTotal.toFixed(2);
+                subtotal += itemSubtotal;
+                totalDiscountAmount += discountAmount;
+            });
+
+            const finalTotal = subtotal - totalDiscountAmount;
+
+            document.getElementById('subtotal').textContent = `LKR ${subtotal.toFixed(2)}`;
+            document.getElementById('totalDiscount').textContent = `LKR ${totalDiscountAmount.toFixed(2)}`;
+            document.getElementById('finalTotal').textContent = `LKR ${finalTotal.toFixed(2)}`;
+        }
+
+        async function downloadPDF() {
+            await generatePDF();
+            
+            if (generatedPDF) {
+                const invoiceNumber = document.getElementById('invoiceNumber').value || 'INV-001';
+                const fileName = `${invoiceNumber}.pdf`;
+                
+                // Create download link
+                const url = URL.createObjectURL(generatedPDF);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            
+            // Get form data
+            const businessName = 'RL Security Solutions';
+            const businessAddress = '7/20 Sriya Mawatha, Panadura';
+            const businessEmail = 'rashmithaperera49@gmail.com';
+            const businessPhone = '0777 4500 60';
+            const invoiceNumber = document.getElementById('invoiceNumber').value || 'INV-001';
+            const invoiceDate = document.getElementById('invoiceDate').value || new Date().toISOString().split('T')[0];
+            const clientName = document.getElementById('clientName').value || 'Client Name';
+            const clientAddress = document.getElementById('clientAddress').value || 'Client Address';
+
+            // Create PDF
+            const pdf = new jsPDF();
+            
+            // Header
+            pdf.setFontSize(24);
+            pdf.setTextColor(79, 70, 229);
+            pdf.text('INVOICE', 20, 30);
+            
+            pdf.setFontSize(16);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text(businessName, 20, 45);
+            
+            pdf.setFontSize(10);
+            pdf.text(businessAddress, 20, 55);
+            pdf.text(`Email: ${businessEmail}`, 20, 62);
+            pdf.text(`Phone: ${businessPhone}`, 20, 69);
+            
+            pdf.setFontSize(12);
+            pdf.text(`Invoice #: ${invoiceNumber}`, 140, 30);
+            pdf.text(`Date: ${invoiceDate}`, 140, 40);
+            
+            // Client info
+            pdf.setFontSize(14);
+            pdf.text('Bill To:', 20, 85);
+            pdf.setFontSize(12);
+            pdf.text(clientName, 20, 95);
+            
+            const addressLines = clientAddress.split('\n');
+            addressLines.forEach((line, index) => {
+                pdf.text(line, 20, 105 + (index * 8));
+            });
+
+            // Products table
+            let yPosition = 135;
+            pdf.setFontSize(12);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Description', 20, yPosition);
+            pdf.text('Qty', 100, yPosition);
+            pdf.text('Price', 125, yPosition);
+            pdf.text('Discount', 150, yPosition);
+            pdf.text('Total', 175, yPosition);
+            
+            // Line under headers
+            pdf.line(20, yPosition + 3, 190, yPosition + 3);
+            
+            yPosition += 15;
+            pdf.setFont(undefined, 'normal');
+            
+            const productItems = document.querySelectorAll('.product-item');
+            let subtotal = 0;
+            let totalDiscountAmount = 0;
+            
+            productItems.forEach(item => {
+                const productName = item.querySelector('.product-name').value || 'Product';
+                const quantity = parseFloat(item.querySelector('.quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.price').value) || 0;
+                const discount = parseFloat(item.querySelector('.discount').value) || 0;
+                
+                const itemSubtotal = quantity * price;
+                const discountAmount = itemSubtotal * (discount / 100);
+                const itemTotal = itemSubtotal - discountAmount;
+                
+                pdf.text(productName, 20, yPosition);
+                pdf.text(quantity.toString(), 100, yPosition);
+                pdf.text(`LKR ${price.toFixed(2)}`, 125, yPosition);
+                pdf.text(`${discount}%`, 150, yPosition);
+                pdf.text(`LKR ${itemTotal.toFixed(2)}`, 175, yPosition);
+                
+                subtotal += itemSubtotal;
+                totalDiscountAmount += discountAmount;
+                yPosition += 12;
+            });
+            
+            // Totals
+            yPosition += 10;
+            pdf.line(125, yPosition, 190, yPosition);
+            yPosition += 10;
+            
+            pdf.text('Subtotal:', 125, yPosition);
+            pdf.text(`LKR ${subtotal.toFixed(2)}`, 175, yPosition);
+            yPosition += 10;
+            
+            pdf.text('Total Discount:', 125, yPosition);
+            pdf.text(`LKR ${totalDiscountAmount.toFixed(2)}`, 175, yPosition);
+            yPosition += 10;
+            
+            pdf.setFont(undefined, 'bold');
+            pdf.text('TOTAL:', 125, yPosition);
+            pdf.text(`LKR ${(subtotal - totalDiscountAmount).toFixed(2)}`, 175, yPosition);
+            
+            // Thank you message
+            yPosition += 30;
+            pdf.setFont(undefined, 'normal');
+            pdf.setFontSize(14);
+            pdf.setTextColor(79, 70, 229);
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const thankYouText = 'Thank you for your Business!';
+            const textWidth = pdf.getTextWidth(thankYouText);
+            const xPosition = (pageWidth - textWidth) / 2;
+            pdf.text(thankYouText, xPosition, yPosition);
+            
+            // Generate PDF blob
+            generatedPDF = pdf.output('blob');
+            
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+            
+            return generatedPDF;
+        }
+
+        async function shareInvoice() {
+            if (!generatedPDF) {
+                await generatePDF();
+            }
+
+            if (!generatedPDF) {
+                alert('Failed to generate invoice. Please try again.');
+                return;
+            }
+
+            const invoiceNumber = document.getElementById('invoiceNumber').value || 'INV-001';
+            const fileName = `${invoiceNumber}.pdf`;
+
+            // Check if Web Share API is supported
+            if (navigator.share && navigator.canShare) {
+                try {
+                    const file = new File([generatedPDF], fileName, { type: 'application/pdf' });
+                    
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: `Invoice ${invoiceNumber}`,
+                            text: `Please find attached invoice ${invoiceNumber}`,
+                            files: [file]
+                        });
+                    } else {
+                        // Fallback to sharing without file
+                        const pdfUrl = URL.createObjectURL(generatedPDF);
+                        await navigator.share({
+                            title: `Invoice ${invoiceNumber}`,
+                            text: `Please find attached invoice ${invoiceNumber}`,
+                            url: pdfUrl
+                        });
+                    }
+                } catch (error) {
+                    console.log('Share cancelled or failed:', error);
+                    fallbackShare();
+                }
+            } else {
+                fallbackShare();
+            }
+        }
+
+        function fallbackShare() {
+            const invoiceNumber = document.getElementById('invoiceNumber').value || 'INV-001';
+            const fileName = `${invoiceNumber}.pdf`;
+            
+            // Create download link
+            const url = URL.createObjectURL(generatedPDF);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            // Show sharing options
+            const shareText = `Invoice ${invoiceNumber} has been downloaded. You can now share it via:`;
+            const shareUrls = {
+                'WhatsApp': `https://wa.me/?text=${encodeURIComponent('Please find attached invoice ' + invoiceNumber)}`,
+                'Telegram': `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent('Invoice ' + invoiceNumber)}`,
+                'Email': `mailto:?subject=${encodeURIComponent('Invoice ' + invoiceNumber)}&body=${encodeURIComponent('Please find attached invoice ' + invoiceNumber)}`
+            };
+            
+            let shareOptions = shareText + '\n\n';
+            Object.entries(shareUrls).forEach(([platform, url]) => {
+                shareOptions += `${platform}: ${url}\n`;
+            });
+            
+            if (confirm('PDF downloaded! Would you like to open sharing options?')) {
+                // Open WhatsApp by default (most common)
+                window.open(shareUrls.WhatsApp, '_blank');
+            }
+        }
+
+        // Initialize event listeners
+        attachEventListeners();
+        calculateTotal();
+    </script>
+</body>
+</html>
